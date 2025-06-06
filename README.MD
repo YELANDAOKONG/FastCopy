@@ -4,5 +4,5 @@
 
 ---
 
-![PREVIEW.png](预览图片)
+![预览图片](PREVIEW.png)
 
