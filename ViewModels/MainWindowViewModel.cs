@@ -1,19 +1,16 @@
-﻿namespace FastCopy.ViewModels;
+﻿// MainWindowViewModel.cs
+namespace FastCopy.ViewModels;
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Collections;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FastCopy.Services;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
@@ -38,14 +35,11 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] 
     private bool _isSuccessMessageVisible;
     
-    private readonly IClipboard? _clipboard;
+    private readonly IClipboardService _clipboardService;
     
-    public MainWindowViewModel()
+    public MainWindowViewModel(IClipboardService clipboardService)
     {
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            _clipboard = desktop.MainWindow?.Clipboard;
-        }
+        _clipboardService = clipboardService;
     }
     
     [RelayCommand]
@@ -72,7 +66,7 @@ public partial class MainWindowViewModel : ViewModelBase
             
             foreach (var file in fileItems)
             {
-                var filePath = file.Path.AbsolutePath;
+                var filePath = file.Path.LocalPath; // Changed from AbsolutePath to LocalPath
                 
                 if (processedPaths.Contains(filePath))
                     continue;
@@ -101,26 +95,18 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 var finalMarkdown = string.Join("\n", markdownBlocks);
                 
-                if (AppendToClipboard && _clipboard != null)
+                if (AppendToClipboard)
                 {
-                    var currentClipboard = await _clipboard.GetTextAsync() ?? string.Empty;
+                    var currentClipboard = await _clipboardService.GetTextAsync() ?? string.Empty;
                     if (!string.IsNullOrEmpty(currentClipboard))
                     {
                         finalMarkdown = currentClipboard + "\n\n" + finalMarkdown;
                     }
                 }
                 
-                if (_clipboard != null)
-                {
-                    await _clipboard.SetTextAsync(finalMarkdown);
-                    
-                    StatusMessage = $"已复制 {FilesCopied} 个文件内容到剪贴板";
-                    ShowSuccessMessage();
-                }
-                else
-                {
-                    StatusMessage = "无法访问剪贴板";
-                }
+                await _clipboardService.SetTextAsync(finalMarkdown);
+                StatusMessage = $"已复制 {FilesCopied} 个文件内容到剪贴板";
+                ShowSuccessMessage();
             }
             else
             {
@@ -163,9 +149,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task CopyRecentFileAsync(string filePath)
     {
-        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath) || _clipboard == null)
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
         {
-            StatusMessage = "文件不存在或无法访问剪贴板";
+            StatusMessage = "文件不存在";
             return;
         }
         
@@ -176,7 +162,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var content = await File.ReadAllTextAsync(filePath);
             var markdown = FormatAsMarkdown(content, filePath);
             
-            await _clipboard.SetTextAsync(markdown);
+            await _clipboardService.SetTextAsync(markdown);
             
             StatusMessage = $"已复制文件内容到剪贴板: {Path.GetFileName(filePath)}";
             ShowSuccessMessage();

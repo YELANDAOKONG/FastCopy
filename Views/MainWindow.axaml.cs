@@ -1,5 +1,4 @@
-using System.IO;
-
+// MainWindow.xaml.cs
 namespace FastCopy.Views;
 
 using Avalonia;
@@ -8,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using FastCopy.ViewModels;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
