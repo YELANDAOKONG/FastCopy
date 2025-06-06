@@ -1,6 +1,207 @@
 ﻿namespace FastCopy.ViewModels;
 
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Collections;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
+using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public string Greeting { get; } = "Welcome to Avalonia!";
+    [ObservableProperty]
+    private string _statusMessage = "拖拽文件到此处以复制内容";
+    
+    [ObservableProperty]
+    private bool _isBusy;
+    
+    [ObservableProperty]
+    private int _filesCopied;
+    
+    [ObservableProperty]
+    private AvaloniaList<string> _recentFiles = new();
+    
+    [ObservableProperty]
+    private bool _includeFilePaths = true;
+    
+    [ObservableProperty]
+    private bool _appendToClipboard;
+    
+    [ObservableProperty] 
+    private bool _isSuccessMessageVisible;
+    
+    private readonly IClipboard? _clipboard;
+    
+    public MainWindowViewModel()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            _clipboard = desktop.MainWindow?.Clipboard;
+        }
+    }
+    
+    [RelayCommand]
+    private async Task HandleDropAsync(IReadOnlyList<IStorageItem> items)
+    {
+        if (items == null || items.Count == 0)
+            return;
+            
+        IsBusy = true;
+        FilesCopied = 0;
+        
+        try
+        {
+            var fileItems = items.OfType<IStorageFile>().ToList();
+            
+            if (fileItems.Count == 0)
+            {
+                StatusMessage = "未找到有效文件";
+                return;
+            }
+            
+            var markdownBlocks = new List<string>();
+            var processedPaths = new HashSet<string>();
+            
+            foreach (var file in fileItems)
+            {
+                var filePath = file.Path.AbsolutePath;
+                
+                if (processedPaths.Contains(filePath))
+                    continue;
+                    
+                processedPaths.Add(filePath);
+                
+                try
+                {
+                    var content = await ReadFileContentAsync(file);
+                    if (string.IsNullOrEmpty(content))
+                        continue;
+                    
+                    var codeBlock = FormatAsMarkdown(content, filePath);
+                    markdownBlocks.Add(codeBlock);
+                    
+                    AddToRecentFiles(filePath);
+                    FilesCopied++;
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"读取失败 [{filePath}]: {ex.Message}";
+                }
+            }
+            
+            if (markdownBlocks.Count > 0)
+            {
+                var finalMarkdown = string.Join("\n", markdownBlocks);
+                
+                if (AppendToClipboard && _clipboard != null)
+                {
+                    var currentClipboard = await _clipboard.GetTextAsync() ?? string.Empty;
+                    if (!string.IsNullOrEmpty(currentClipboard))
+                    {
+                        finalMarkdown = currentClipboard + "\n\n" + finalMarkdown;
+                    }
+                }
+                
+                if (_clipboard != null)
+                {
+                    await _clipboard.SetTextAsync(finalMarkdown);
+                    
+                    StatusMessage = $"已复制 {FilesCopied} 个文件内容到剪贴板";
+                    ShowSuccessMessage();
+                }
+                else
+                {
+                    StatusMessage = "无法访问剪贴板";
+                }
+            }
+            else
+            {
+                StatusMessage = "没有有效内容可复制";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"操作失败: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+    
+    private async Task<string> ReadFileContentAsync(IStorageFile file)
+    {
+        using var stream = await file.OpenReadAsync();
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync();
+    }
+    
+    private string FormatAsMarkdown(string content, string filePath)
+    {
+        var codeIdentifier = IncludeFilePaths ? filePath : Path.GetExtension(filePath);
+        
+        return $"```{codeIdentifier}\n{content.TrimEnd()}\n```\n";
+    }
+    
+    private void AddToRecentFiles(string filePath)
+    {
+        if (RecentFiles.Count >= 10)
+            RecentFiles.RemoveAt(RecentFiles.Count - 1);
+            
+        if (!RecentFiles.Contains(filePath))
+            RecentFiles.Insert(0, filePath);
+    }
+    
+    [RelayCommand]
+    private async Task CopyRecentFileAsync(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath) || _clipboard == null)
+        {
+            StatusMessage = "文件不存在或无法访问剪贴板";
+            return;
+        }
+        
+        IsBusy = true;
+        
+        try
+        {
+            var content = await File.ReadAllTextAsync(filePath);
+            var markdown = FormatAsMarkdown(content, filePath);
+            
+            await _clipboard.SetTextAsync(markdown);
+            
+            StatusMessage = $"已复制文件内容到剪贴板: {Path.GetFileName(filePath)}";
+            ShowSuccessMessage();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"复制失败: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+    
+    [RelayCommand]
+    private void ClearRecentFiles()
+    {
+        RecentFiles.Clear();
+        StatusMessage = "已清空最近文件列表";
+    }
+    
+    private async void ShowSuccessMessage()
+    {
+        IsSuccessMessageVisible = true;
+        await Task.Delay(3000);
+        IsSuccessMessageVisible = false;
+    }
 }

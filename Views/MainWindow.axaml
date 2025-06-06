@@ -3,18 +3,194 @@
         xmlns:vm="using:FastCopy.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="300"
         x:Class="FastCopy.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="FastCopy">
+        Title="FastCopy"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True"
+        Width="450" Height="300"
+        MinWidth="350" MinHeight="250"
+        WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="SystemDecorations" Value="Full" />
+        </Style>
+        
+        <Style Selector="Border.DropZone">
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Background" Value="#1A000000" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.DropZone:pointerover">
+            <Setter Property="BorderBrush" Value="#606060" />
+            <Setter Property="Background" Value="#22000000" />
+        </Style>
+        
+        <Style Selector="Border.SuccessMessage">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.SuccessMessage[IsVisible=true]">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        
+        <Style Selector="ToggleButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+        
+        <Style Selector="ToggleButton:checked">
+            <Setter Property="Background" Value="#3A3A3A" />
+        </Style>
+        
+        <Style Selector="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+        
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#333333" />
+        </Style>
+    </Window.Styles>
 
+    <Panel>
+        <!-- Acrylic background -->
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="0.8"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- Title bar area -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="10,5">
+                <TextBlock Grid.Column="0" Text="FastCopy" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0" />
+                
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <ToggleButton Content="包含文件路径" IsChecked="{Binding IncludeFilePaths}" />
+                    <ToggleButton Content="追加到剪贴板" IsChecked="{Binding AppendToClipboard}" />
+                </StackPanel>
+            </Grid>
+            
+            <!-- Main content area -->
+            <Grid Grid.Row="1" RowDefinitions="*,Auto">
+                <!-- Drop zone -->
+                <Border Grid.Row="0" Classes="DropZone"
+                        DragDrop.AllowDrop="True">
+                    
+                    <Grid RowDefinitions="*,Auto">
+                        <Panel Grid.Row="0">
+                            <!-- Icon and primary message -->
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="15">
+                                <PathIcon Data="M5 4C3.89543 4 3 4.89543 3 6V18C3 19.1046 3.89543 20 5 20H19C20.1046 20 21 19.1046 21 18V12H19V18H5V6H19V8H21V6C21 4.89543 20.1046 4 19 4H5ZM21.7071 9.70711L16.7071 14.7071L15.2929 13.2929L18.5858 10H13V8H18.5858L15.2929 4.70711L16.7071 3.29289L21.7071 8.29289C22.0976 8.68342 22.0976 9.31658 21.7071 9.70711Z"
+                                         Width="48" Height="48" />
+                                <TextBlock Text="{Binding StatusMessage}" TextAlignment="Center" />
+                            </StackPanel>
+                            
+                            <!-- Busy indicator -->
+                            <ProgressBar IsIndeterminate="True" 
+                                         IsVisible="{Binding IsBusy}"
+                                         VerticalAlignment="Bottom"
+                                         Margin="0,8,0,0"
+                                         Height="4" />
+                                         
+                            <!-- Success message -->
+                            <Border Classes="SuccessMessage"
+                                    IsVisible="{Binding IsSuccessMessageVisible}"
+                                    Background="#3F2F7F2F"
+                                    CornerRadius="6"
+                                    Padding="12,8"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Bottom"
+                                    Margin="0,0,0,10">
+                                <TextBlock Text="✓ 复制成功" Foreground="#E0FFFFFF" />
+                            </Border>
+                        </Panel>
+                        
+                        <!-- Recent files list -->
+                        <Expander Grid.Row="1" 
+                                  Header="最近文件" 
+                                  IsExpanded="False"
+                                  Margin="0,8,0,0">
+                            <Grid RowDefinitions="*,Auto">
+                                <!-- Replace the ItemsControl section with this fixed version -->
+                                <ScrollViewer Grid.Row="0" MaxHeight="120">
+                                    <ItemsControl ItemsSource="{Binding RecentFiles}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Left"
+                                                        Margin="0,2"
+                                                        x:CompileBindings="False">
+                                                    <Button.Command>
+                                                        <Binding Path="DataContext.CopyRecentFileAsyncCommand" 
+                                                                 RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type Window}}"/>
+                                                    </Button.Command>
+                                                    <Button.CommandParameter>
+                                                        <Binding Path="."/>
+                                                    </Button.CommandParameter>
+                                                    <TextBlock Text="{Binding}" 
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+
+                                
+                                <Button Grid.Row="1" 
+                                        Content="清空列表"
+                                        HorizontalAlignment="Right" 
+                                        Margin="0,4,0,0"
+                                        Command="{Binding ClearRecentFilesCommand}" />
+                            </Grid>
+                        </Expander>
+                    </Grid>
+                </Border>
+            </Grid>
+            
+            <!-- Footer -->
+            <StackPanel Grid.Row="2" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Right"
+                        Margin="10,5">
+                <TextBlock Text="拖入文件复制内容" 
+                           Foreground="#909090"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </Panel>
 </Window>
