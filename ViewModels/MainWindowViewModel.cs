@@ -11,6 +11,8 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FastCopy.Services;
+using FastCopy.Views;
+using Microsoft.Extensions.DependencyInjection;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
@@ -36,10 +38,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isSuccessMessageVisible;
     
     private readonly IClipboardService _clipboardService;
+    private readonly IServiceProvider _serviceProvider;
     
-    public MainWindowViewModel(IClipboardService clipboardService)
+    public MainWindowViewModel(IClipboardService clipboardService, IServiceProvider serviceProvider)
     {
         _clipboardService = clipboardService;
+        _serviceProvider = serviceProvider;
     }
     
     [RelayCommand]
@@ -182,6 +186,18 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         RecentFiles.Clear();
         StatusMessage = "已清空最近文件列表";
+    }
+    
+    [RelayCommand]
+    private void OpenFileListWindow()
+    {
+        var fileListViewModel = _serviceProvider.GetRequiredService<FileListWindowViewModel>();
+        var fileListWindow = new FileListWindow
+        {
+            DataContext = fileListViewModel
+        };
+        
+        fileListWindow.Show();
     }
     
     private async void ShowSuccessMessage()

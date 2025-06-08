@@ -55,6 +55,7 @@ public partial class App : Application
         
         // Register view models
         services.AddTransient<MainWindowViewModel>();
+        services.AddTransient<FileListWindowViewModel>();
     }
     
     private void DisableAvaloniaDataAnnotationValidation()

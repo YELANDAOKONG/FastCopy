@@ -1,0 +1,180 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FastCopy.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="550" d:DesignHeight="400"
+        x:Class="FastCopy.Views.FileListWindow"
+        x:DataType="vm:FileListWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="文件列表复制"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True"
+        Width="550" Height="400"
+        MinWidth="450" MinHeight="350"
+        WindowStartupLocation="CenterOwner">
+
+    <Design.DataContext>
+        <vm:FileListWindowViewModel/>
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="Window">
+            <Setter Property="SystemDecorations" Value="Full" />
+        </Style>
+        
+        <Style Selector="Border.DropZone">
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Background" Value="#1A000000" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+                    <BrushTransition Property="Background" Duration="0:0:0.2" />
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.DropZone:pointerover">
+            <Setter Property="BorderBrush" Value="#606060" />
+            <Setter Property="Background" Value="#22000000" />
+        </Style>
+        
+        <Style Selector="Border.SuccessMessage">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.SuccessMessage[IsVisible=true]">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        
+        <Style Selector="ToggleButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+        
+        <Style Selector="ToggleButton:checked">
+            <Setter Property="Background" Value="#3A3A3A" />
+        </Style>
+        
+        <Style Selector="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#404040" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+        
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#333333" />
+        </Style>
+    </Window.Styles>
+
+    <Panel>
+        <!-- Acrylic background -->
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="0.8"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        
+        <Grid RowDefinitions="Auto,*,Auto">
+            <!-- Title bar area -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="10,5">
+                <TextBlock Grid.Column="0" Text="文件列表复制" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0" />
+            </Grid>
+            
+            <!-- Main content area -->
+            <Grid Grid.Row="1" RowDefinitions="*,Auto">
+                <!-- Drop zone -->
+                <Border Grid.Row="0" Classes="DropZone"
+                        DragDrop.AllowDrop="True">
+                    
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Row="0" 
+                                   Text="{Binding StatusMessage}" 
+                                   TextAlignment="Center"
+                                   Margin="0,0,0,10" />
+                        
+                        <!-- Text editor -->
+                        <TextBox Grid.Row="1"
+                                 Text="{Binding FileListText}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="NoWrap"
+                                 FontFamily="Consolas, Menlo, Monospace"
+                                 Padding="8"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                        
+                        <!-- Buttons -->
+                        <StackPanel Grid.Row="2" 
+                                    Orientation="Horizontal" 
+                                    HorizontalAlignment="Center"
+                                    Margin="0,10,0,0" 
+                                    Spacing="10">
+                            <Button Content="复制内容" 
+                                    Command="{Binding ProcessFileListCommand}" 
+                                    IsEnabled="{Binding !IsBusy}" />
+                            <Button Content="清空列表" 
+                                    Command="{Binding ClearFileListCommand}" 
+                                    IsEnabled="{Binding !IsBusy}" />
+                        </StackPanel>
+                        
+                        <!-- Success message -->
+                        <Border Grid.Row="2"
+                                Classes="SuccessMessage"
+                                IsVisible="{Binding IsSuccessMessageVisible}"
+                                Background="#3F2F7F2F"
+                                CornerRadius="6"
+                                Padding="12,8"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                Margin="0,10,0,0">
+                            <TextBlock Text="✓ 复制成功" Foreground="#E0FFFFFF" />
+                        </Border>
+                        
+                        <!-- Busy indicator -->
+                        <ProgressBar Grid.Row="2" 
+                                     IsIndeterminate="True" 
+                                     IsVisible="{Binding IsBusy}"
+                                     VerticalAlignment="Bottom"
+                                     Margin="0,10,0,0"
+                                     Height="4" />
+                    </Grid>
+                </Border>
+            </Grid>
+            
+            <!-- Footer with options -->
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="10,5">
+                <!-- Options -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" 
+                            HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <ToggleButton Content="包含文件路径" IsChecked="{Binding IncludeFilePaths}" />
+                    <ToggleButton Content="追加到剪贴板" IsChecked="{Binding AppendToClipboard}" />
+                </StackPanel>
+                
+                <!-- Help text -->
+                <TextBlock Grid.Column="2" 
+                           Text="支持多种路径格式" 
+                           Foreground="#909090"
+                           VerticalAlignment="Center" />
+            </Grid>
+        </Grid>
+    </Panel>
+</Window>
