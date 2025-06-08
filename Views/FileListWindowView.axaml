@@ -143,7 +143,7 @@
                                 Background="#3F2F7F2F"
                                 CornerRadius="6"
                                 Padding="12,8"
-                                HorizontalAlignment="Center"
+                                HorizontalAlignment="Left"
                                 VerticalAlignment="Bottom"
                                 Margin="0,10,0,0">
                             <TextBlock Text="✓ 复制成功" Foreground="#E0FFFFFF" />

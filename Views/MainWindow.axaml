@@ -13,7 +13,7 @@
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
         Width="450" Height="300"
-        MinWidth="350" MinHeight="250"
+        MinWidth="450" MinHeight="250"
         WindowStartupLocation="CenterScreen">
 
     <Design.DataContext>
@@ -99,11 +99,11 @@
             <!-- Title bar area - simplified with just the title -->
             <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="10,5">
                 <TextBlock Grid.Column="0" Text="FastCopy" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0" />
-                <Button Grid.Column="2" 
-                        Content="文件列表" 
-                        Command="{Binding OpenFileListWindowCommand}"
-                        VerticalAlignment="Center"
-                        Margin="0,0,10,0" />
+                <!-- <Button Grid.Column="2"  -->
+                <!--         Content="文件列表"  -->
+                <!--         Command="{Binding OpenFileListWindowCommand}" -->
+                <!--         VerticalAlignment="Center" -->
+                <!--         Margin="0,0,10,0" /> -->
             </Grid>
             
             <!-- Main content area -->
@@ -188,6 +188,10 @@
                             HorizontalAlignment="Left" VerticalAlignment="Center">
                     <ToggleButton Content="包含文件路径" IsChecked="{Binding IncludeFilePaths}" />
                     <ToggleButton Content="追加到剪贴板" IsChecked="{Binding AppendToClipboard}" />
+                    <Button Content="文件列表" 
+                            Command="{Binding OpenFileListWindowCommand}"
+                            VerticalAlignment="Center"
+                            Margin="0,0,10,0" />
                 </StackPanel>
                 
                 <!-- Status text on right -->
