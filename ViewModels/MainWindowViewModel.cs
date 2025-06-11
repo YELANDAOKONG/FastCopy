@@ -1,5 +1,4 @@
-﻿// MainWindowViewModel.cs
-namespace FastCopy.ViewModels;
+﻿namespace FastCopy.ViewModels;
 
 using System;
 using System.Collections.Generic;
@@ -36,6 +35,9 @@ public partial class MainWindowViewModel : ViewModelBase
     
     [ObservableProperty] 
     private bool _isSuccessMessageVisible;
+    
+    [ObservableProperty]
+    private int _backtickCount = 9;
     
     private readonly IClipboardService _clipboardService;
     private readonly IServiceProvider _serviceProvider;
@@ -137,8 +139,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private string FormatAsMarkdown(string content, string filePath)
     {
         var codeIdentifier = IncludeFilePaths ? filePath : Path.GetExtension(filePath);
+        string backticks = new string('`', BacktickCount);
         
-        return $"```{codeIdentifier}\n{content.TrimEnd()}\n```\n";
+        return $"{backticks}{codeIdentifier}\n{content.TrimEnd()}\n{backticks}\n";
     }
     
     private void AddToRecentFiles(string filePath)
@@ -192,6 +195,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OpenFileListWindow()
     {
         var fileListViewModel = _serviceProvider.GetRequiredService<FileListWindowViewModel>();
+        
+        // Copy settings to the file list window view model
+        fileListViewModel.IncludeFilePaths = IncludeFilePaths;
+        fileListViewModel.AppendToClipboard = AppendToClipboard;
+        fileListViewModel.BacktickCount = BacktickCount;
+        
         var fileListWindow = new FileListWindow
         {
             DataContext = fileListViewModel

@@ -167,6 +167,18 @@
                             HorizontalAlignment="Left" VerticalAlignment="Center">
                     <ToggleButton Content="包含文件路径" IsChecked="{Binding IncludeFilePaths}" />
                     <ToggleButton Content="追加到剪贴板" IsChecked="{Binding AppendToClipboard}" />
+                    
+                    <!-- Add backtick count control -->
+                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="反引号数:" VerticalAlignment="Center" />
+                        <NumericUpDown Value="{Binding BacktickCount}"
+                                    Minimum="3"
+                                    Maximum="120"
+                                    Width="120"
+                                    Height="28"
+                                    VerticalAlignment="Center"
+                                    FormatString="0" />
+                    </StackPanel>
                 </StackPanel>
                 
                 <!-- Help text -->

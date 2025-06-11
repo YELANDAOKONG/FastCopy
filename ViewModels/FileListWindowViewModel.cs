@@ -1,5 +1,4 @@
-﻿// FileListWindowViewModel.cs
-namespace FastCopy.ViewModels;
+﻿namespace FastCopy.ViewModels;
 
 using System;
 using System.Collections.Generic;
@@ -33,6 +32,9 @@ public partial class FileListWindowViewModel : ViewModelBase
     
     [ObservableProperty] 
     private bool _isSuccessMessageVisible;
+    
+    [ObservableProperty]
+    private int _backtickCount = 9;
     
     private readonly IClipboardService _clipboardService;
     
@@ -207,8 +209,9 @@ public partial class FileListWindowViewModel : ViewModelBase
     private string FormatAsMarkdown(string content, string filePath)
     {
         var codeIdentifier = IncludeFilePaths ? filePath : Path.GetExtension(filePath);
+        string backticks = new string('`', BacktickCount);
         
-        return $"```{codeIdentifier}\n{content.TrimEnd()}\n```\n";
+        return $"{backticks}{codeIdentifier}\n{content.TrimEnd()}\n{backticks}\n";
     }
     
     [RelayCommand]
